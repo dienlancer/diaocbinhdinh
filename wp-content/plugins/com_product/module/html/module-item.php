@@ -40,7 +40,7 @@ if(!empty($instance['item_id'])){
 						$featureImg=site_url('/wp-content/uploads/'.$featureImg ,null );  
 						?>
 						<div class="col-lg-4">
-							<div><a href="<?php echo $permalink; ?>"><img src="<?php echo $featureImg; ?>" /></a></div>
+							<div><center><figure><a href="<?php echo $permalink; ?>"><img src="<?php echo $featureImg; ?>" /></a></figure></center></div>
 							<div class="margin-top-15 title-news"><a href="<?php echo $permalink; ?>"><?php echo substr($title, 0,150); ?></a></div>
 							<div class="margin-top-15 single-blog-post"><?php echo $excerpt; ?></div>
 							<div class="margin-top-15 single-blog-post-readmore"><a  href="<?php echo $permalink; ?>">Xem thêm <i class="fa fa-angle-double-right"></i></a></div>
