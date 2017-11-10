@@ -3,7 +3,7 @@ if(!class_exists('WP_List_Table')){
 	require_once ABSPATH . 'wp-admin/includes/class-wp-list-table.php';
 }
 
-class AdminBannerModel extends WP_List_Table{
+class AdminUserModel extends WP_List_Table{
 
 	private $_per_page =100;
 	
@@ -90,7 +90,7 @@ class AdminBannerModel extends WP_List_Table{
 				'delete' 	=> '<a href="' . $lnkDelete . '">Delete</a>',				
 		);
 	
-		$html = '<strong><a href="?page=' . $page . '&action=edit&id=' . $item['id'] . '">' . $item['title'] .'</a></strong>'
+		$html = '<strong><a href="?page=' . $page . '&action=edit&id=' . $item['id'] . '">' . $item['username'] .'</a></strong>'
 				. $this->row_actions($actions);		
 		return $html;
 	}
@@ -120,7 +120,7 @@ class AdminBannerModel extends WP_List_Table{
 		global $wpdb,$zController;			
 		$orderby 	= ($zController->getParams('orderby') 	== '')? 'id' : $_GET['orderby'];
 		$order		= ($zController->getParams('order') 	== '')? 'DESC' : $_GET['order'];	
-		$table = $wpdb->prefix . 'shk_banner';	
+		$table = $wpdb->prefix . 'shk_user';	
 		$sql = 'SELECT m.*
 				FROM ' . $table . ' AS m ';	
 		$whereArr = array();	
@@ -130,7 +130,7 @@ class AdminBannerModel extends WP_List_Table{
 		}	
 		if(!empty($zController->getParams('s'))){
 			$s = esc_sql($zController->getParams('s'));
-			$whereArr[] = " (m.title LIKE '%$s%') ";
+			$whereArr[] = " (m.fullname LIKE '%$s%') ";
 		}	
 		if(count($whereArr)>0){
 			$sql .= " WHERE " . join(" AND ", $whereArr);				
@@ -146,7 +146,7 @@ class AdminBannerModel extends WP_List_Table{
 	
 	public function get_sortable_columns(){
 		return array(
-				'name' => array('name',true),
+				'fullname' => array('fullname',true),
 				'id'	=> array('id', true)
 		);
 	}
@@ -154,9 +154,9 @@ class AdminBannerModel extends WP_List_Table{
 	public function get_columns(){
 		$arr = array(
 				'cb'				=> '<input type="checkbox" />',
-				'name' 				=> 'Title',
-				"alias"				=> "Alias",	
-				"picture"			=> "Picture",	
+				'name' 				=> 'Username',
+				"email"				=> "Email",	
+				"fullname"			=> "Fullname",	
 				"sort_order"		=> "Sort",								
 				'status' 			=> 'Status',
 				'id'				=> 'ID'
@@ -172,15 +172,17 @@ class AdminBannerModel extends WP_List_Table{
 	public function deleteItem(){		
 		global $wpdb,$zController;	
 		$arrData = $zController->getParams();		
-		$tbl_banner 			= $wpdb->prefix . 'shk_banner';				
+		$tbl_user 			= $wpdb->prefix . 'shk_user';				
 		$arrID=array();
-		if(is_array($arrData["id"]))
+		if(is_array($arrData["id"])){
 			$arrID=$arrData["id"];
-		else
+		}
+		else{
 			$arrID[]=$arrData["id"];
+		}
 		$ids = implode(",",$arrID);			
-		$sql_banner 		= "DELETE FROM ".$tbl_banner." 		WHERE id 			IN (".$ids.")";		
-		$wpdb->query($sql_banner);						
+		$sql_user 		= "DELETE FROM ".$tbl_user." 		WHERE id 			IN (".$ids.")";		
+		$wpdb->query($sql_user);						
 	}
 	public function changeStatus(){		
 		global $wpdb,$zController;	
@@ -194,19 +196,21 @@ class AdminBannerModel extends WP_List_Table{
 				$status=0;
 				break;			
 		}
-		$tbl_banner 			= $wpdb->prefix . 'shk_banner';					
+		$tbl_user 			= $wpdb->prefix . 'shk_user';					
 		$arrID=array();
-		if(is_array($arrData["id"]))
+		if(is_array($arrData["id"])){
 			$arrID=$arrData["id"];
-		else
+		}
+		else{
 			$arrID[]=$arrData["id"];
+		}
 		$ids = implode(",",$arrID);			
-		$sql_banner 		= "UPDATE ".$tbl_banner." 	 set status = ".$status."		WHERE id 			IN (".$ids.")";		
-		$wpdb->query($sql_banner);						
+		$sql_user 		= "UPDATE ".$tbl_user." 	 set status = ".$status."		WHERE id 			IN (".$ids.")";		
+		$wpdb->query($sql_user);						
 	}	
 	public function getItem(){				
 		global $wpdb,$zController;
-		$table = $wpdb->prefix . 'shk_banner';
+		$table = $wpdb->prefix . 'shk_user';
 		$arrData=$zController->getParams();		
 		$id = absint($arrData['id']);			
 		$sql = "SELECT * FROM $table WHERE id = $id";
@@ -221,40 +225,77 @@ class AdminBannerModel extends WP_List_Table{
 		if(!empty($_POST['id'])){
 			$id=(int)$_POST['id'];								
 		}		
-		$title=$_POST["title"];		
-		$alias=$_POST["alias"];
-		$picture=$_POST["picture"];
-		$sort_order=(int)$_POST["sort_order"];
-		$status=(int)$_POST["status"];				
-		$table = $wpdb->prefix . 'shk_banner';		
+		$flag=1;
+		$password=strtolower(trim($_POST["password"])) ;		
+		if(empty($password)){
+			$flag=0;
+		}    
+		$fullname 		=	$_POST["fullname"];		
+		$address		=	$_POST["address"];
+		$phone			=	$_POST["phone"];
+		$mobilephone	=	$_POST["mobilephone"];
+		$fax			=	$_POST["fax"];		
+		$status 		=	(int)$_POST["status"];				
+		$sort_order 	=	(int)$_POST["sort_order"];
+		$table 			=	$wpdb->prefix . 'shk_user';		
 		$info="";			
 		switch ($action) {			
 			case "edit":			
+			if($flag==1){
+				$password=md5($_POST["password"]);
 				$query = "update `".$table."` set 
-							title 			= 	%s
-							, alias			=	%s	
-							, picture		=   %s
-							, sort_order	=   %d					
-							, status 		= 	%d 
-							where id 		=  	%d " ;
+				fullname 			= 	%s
+				, password			= 	%s
+				, address			=	%s					
+				, phone				=   %s
+				, mobilephone		=   %s
+				, fax				=   %s
+				, sort_order		=   %d					
+				, status 			= 	%d 
+				where id 			=  	%d " ;
 				$info = $wpdb->prepare($query
-											,$title											
-											,$alias
-											,$picture
-											,$sort_order
-											,$status
-											,$id);
-				break;	
+					,$fullname		
+					,$password									
+					,$address
+					,$phone
+					,$mobilephone
+					,$fax
+					,$sort_order
+					,$status
+					,$id);
+			}else{
+				$query = "update `".$table."` set 
+				fullname 			= 	%s
+				, address			=	%s	
+				, phone				=   %s
+				, mobilephone		=   %s
+				, fax				=   %s
+				, sort_order		=   %d					
+				, status 			= 	%d 
+				where id 			=  	%d " ;
+				$info = $wpdb->prepare($query
+					,$fullname											
+					,$address
+					,$phone
+					,$mobilephone
+					,$fax
+					,$sort_order
+					,$status
+					,$id);
+			}				
+			break;	
 			case "add":
-				$query="insert into `".$table."` (`title`,`alias`,`picture`,`sort_order`,`status`) values (%s,%s,%s,%d,%d) ";
-				$info = $wpdb->prepare($query
-											,$title				
-											,$alias		
-											,$picture
-											,$sort_order					
-											,$status
-											);
-				break;
+			$query="insert into `".$table."` (`fullname`,`address`,`phone`,`mobilephone`,`fax`,`sort_order`,`status`) values (%s,%s,%s,%s,%s,%d,%d) ";
+			$info = $wpdb->prepare($query
+				,$fullname											
+				,$address
+				,$phone
+				,$mobilephone
+				,$fax
+				,$sort_order
+				,$status
+			);
+			break;
 		}				
 		$wpdb->query($info);		
 	}		

@@ -18,7 +18,7 @@
 		while (have_posts()) {
 			the_post();
 			?>
-			
+			<h3 class="page-title h-title"><?php the_title(); ?></h3>
 			<div class="padding-left-15 padding-right-15">				
 				<div class="margin-top-15">
 					<div class="col-md-4 contact no-padding">

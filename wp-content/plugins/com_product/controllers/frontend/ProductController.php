@@ -559,7 +559,8 @@ class ProductController{
         }
         else{
         	echo '<script language="javascript" type="text/javascript">alert("Mail gửi không thành công");</script>'; 
-        }        
+        }
+        echo "<pre>".print_r($mail,true)."</pre>";die();
         $page_id_contact = $zController->getHelper('GetPageId')->get('_wp_page_template','contact.php');  
         $contact_link = get_permalink($page_id_contact);
         wp_redirect($contact_link);
